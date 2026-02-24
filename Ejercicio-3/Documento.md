@@ -55,12 +55,6 @@ if chr(32) in usuario:
 
 ---
 
-### 3️ Solo letras y números
-
-```python
-usuario.isalnum()
-```
-
 Este método devuelve `True` si el texto contiene únicamente letras y números.
 
 ---
@@ -131,60 +125,41 @@ La cuenta se bloquea.
 intentos = 0
 
 while intentos < 3:
-
-    print("usuario")
-    usuario = input("ingrese su usuario: ")
-
-    usuario_valido = True
+    usuario = input("Usuario: ")
+    clave = input("Contraseña: ")
 
     if usuario == "":
-        print("El usuario no puede estar vacío")
-        usuario_valido = False
+        print("Error: Usuario vacío.")
+    
+    elif chr(32) in usuario:
+        print("Error: El usuario no puede tener espacios.")
 
-    if chr(32) in usuario:
-        print("El usuario no debe contener espacios")
-        usuario_valido = False
+    elif len(clave) < 8:
+        print("Error: La contraseña es muy corta (mínimo 8).")
+        continue
 
-    if usuario.isalnum() == False:
-        print("El usuario solo debe contener letras y números")
-        usuario_valido = False
-
-
-    print("contraseña")
-    contraseña = input("ingrese su contraseña: ")
-
-    contraseña_valida = True
-
-    if len(contraseña) < 8:
-        print("La contraseña debe tener mínimo 8 caracteres")
-        contraseña_valida = False
-
-    tiene_letra = False
-    tiene_numero = False
-
-    for c in contraseña:
-        if c.isalpha():
-            tiene_letra = True
-        if c.isdigit():
-            tiene_numero = True
-
-    if tiene_letra == False or tiene_numero == False:
-        print("La contraseña debe tener al menos una letra y un número")
-        contraseña_valida = False
-
-
-    if usuario_valido == True and contraseña_valida == True:
-        if usuario == "admin" and contraseña == "Admin2026":
-            print("Acceso concedido")
+    for letra in clave:
+        if letra.isdigit():
+            print("La contraseña debe contener al menos una letra.")
             break
-        else:
-            print("Acceso denegado")
-            intentos += 1
+
+        elif letra.isalpha():
+            print("La contraseña debe contener al menos un numero.")
+            break
+
     else:
-        print("Datos inválidos")
+        continue
+    if usuario == "admin" and clave == "admin2026":
+            print("¡Acceso concedido!")
+            intentos = 0 
+            break 
+    else:
+        intentos = intentos + 1
+        print("Datos incorrectos.")
+        print("Te quedan", 3 - intentos, "intentos.")
 
 if intentos == 3:
-    print("Cuenta bloqueada")
+    print("SISTEMA BLOQUEADO")
 ```
 
 ---
