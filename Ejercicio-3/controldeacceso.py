@@ -22,7 +22,6 @@ while intentos < 3:
         elif letra.isalpha():
             print("La contraseña debe contener al menos un numero.")
             break
-
     else:
         continue
     if usuario == "admin" and clave == "admin2026":
@@ -36,4 +35,5 @@ while intentos < 3:
 
 if intentos == 3:
     print("SISTEMA BLOQUEADO")
+
 
