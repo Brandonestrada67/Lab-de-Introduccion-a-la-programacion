@@ -7,7 +7,7 @@ while intentos < 3:
     if usuario == "":
         print("Error: Usuario vacío.")
     
-    elif " " in usuario:
+    elif chr(32) in usuario:
         print("Error: El usuario no puede tener espacios.")
 
     elif len(clave) < 8:
@@ -36,3 +36,4 @@ while intentos < 3:
 
 if intentos == 3:
     print("SISTEMA BLOQUEADO")
+
