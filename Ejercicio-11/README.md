@@ -1,4 +1,4 @@
-#  Escáner Pro (QR y Código de Barras)
+#  Escáner (QR y Código de Barras)
 ## Hecho por Brandon Estrada
 ### :)
 
