@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Escáner Pro</title>
+
+    <!-- Librerías -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg-primary: #020812;
+            --bg-soft: rgba(10, 20, 50, 0.93);
+            --accent-blue: #7be7ff;
+            --accent-pink: #ff7fd3;
+            --accent-cyan: #72f0d4;
+            --text-main: #f4f9ff;
+            --text-muted: #95a7c1;
+            --panel-border: rgba(123, 231, 255, 0.2);
+            --shadow: 0 26px 55px rgba(0, 0, 0, 0.28);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at top left, rgba(123, 231, 255, 0.16), transparent 20%),
+                        radial-gradient(circle at bottom right, rgba(255, 127, 211, 0.14), transparent 18%),
+                        linear-gradient(160deg, #020812 0%, #07182d 35%, #061226 100%);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            padding: 34px 36px;
+            border-radius: 32px;
+            background: var(--bg-soft);
+            border: 1px solid var(--panel-border);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before,
+        .container::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.65;
+        }
+
+        .container::before {
+            width: 180px;
+            height: 180px;
+            top: -70px;
+            left: -70px;
+            background: rgba(123, 231, 255, 0.28);
+        }
+
+        .container::after {
+            width: 220px;
+            height: 220px;
+            bottom: -80px;
+            right: -90px;
+            background: rgba(255, 127, 211, 0.22);
+        }
+
+        h1 {
+            margin: 0 0 24px;
+            font-size: clamp(2.3rem, 2.8vw, 3.4rem);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            text-shadow: 0 0 26px rgba(123, 231, 255, 0.22);
+        }
+
+        h1 span {
+            display: inline-block;
+            color: var(--accent-cyan);
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 58px;
+            border: none;
+            border-radius: 18px;
+            padding: 0 22px;
+            background: linear-gradient(135deg, #4d9bff 0%, #6ee7ff 48%, #ff7fd3 100%);
+            color: #031123;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            filter: brightness(1.05);
+            box-shadow: 0 28px 52px rgba(0, 0, 0, 0.28);
+        }
+
+        button svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        #scanner {
+            width: 100%;
+            height: 340px;
+            border-radius: 28px;
+            overflow: hidden;
+            border: 1px solid rgba(123, 231, 255, 0.14);
+            background: radial-gradient(circle at center, rgba(255,255,255,0.06), transparent 55%),
+                        linear-gradient(180deg, rgba(9, 18, 35, 0.9), rgba(5, 10, 20, 0.95));
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+
+        #scanner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+                              linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        #resultado {
+            margin-top: 26px;
+            padding: 22px 24px;
+            border-radius: 22px;
+            background: rgba(1, 7, 20, 0.96);
+            border-left: 4px solid rgba(123, 231, 255, 0.62);
+            box-shadow: 0 18px 46px rgba(0, 0, 0, 0.26);
+            color: var(--text-main);
+            min-height: 88px;
+        }
+
+        #resultado::before {
+            content: 'RESULTADO';
+            display: inline-block;
+            margin-bottom: 12px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent-pink);
+        }
+
+        #resultado p,
+        #resultado h2,
+        #resultado a,
+        #resultado small {
+            margin: 0;
+        }
+
+        #resultado h2 {
+            margin-bottom: 10px;
+            font-size: 1.25rem;
+        }
+
+        #resultado a {
+            color: var(--accent-cyan);
+            text-decoration: underline;
+        }
+
+        img {
+            margin-top: 16px;
+            max-width: 140px;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            display: block;
+        }
+
+        .small-text {
+            display: block;
+            margin-top: 10px;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 560px) {
+            .buttons {
+                grid-template-columns: 1fr;
+            }
+
+            #scanner {
+                height: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📷 Escáner Pro</h1>
+
+    <button onclick="iniciarBarras()">� Barras</button>
+    <button onclick="iniciarQR()">✨ QR</button>
+
+    <div id="scanner"></div>
+
+    <div id="resultado">Presiona un botón para comenzar</div>
+</div>
+
+<script>
+    let qrScanner = null;
+    let quaggaActivo = false;
+    let ultimo = null;
+    let repeticiones = 0;
+
+    function limpiarPantalla() {
+        document.getElementById("resultado").innerHTML = "Escaneando...";
+    }
+
+    function detenerTodo() {
+        // Detener barras
+        if (quaggaActivo) {
+            Quagga.stop();
+            quaggaActivo = false;
+        }
+
+        // Detener QR
+        if (qrScanner) {
+            qrScanner.stop()
+                .then(() => qrScanner.clear())
+                .catch(err => console.log(err));
+            qrScanner = null;
+        }
+
+        ultimo = null;
+        repeticiones = 0;
+    }
+
+    // 📦 ESCANEAR BARRAS (PRECISO)
+    function iniciarBarras() {
+        detenerTodo();
+        limpiarPantalla();
+
+        Quagga.init({
+            inputStream: {
+                type: "LiveStream",
+                target: document.querySelector('#scanner'),
+                constraints: {
+                    facingMode: "environment",
+                    width: 640,
+                    height: 480
+                }
+            },
+            locator: {
+                patchSize: "medium",
+                halfSample: true
+            },
+            numOfWorkers: navigator.hardwareConcurrency || 4,
+            frequency: 10,
+            decoder: {
+                readers: ["ean_reader"]
+            },
+            locate: true
+        }, function(err) {
+            if (err) {
+                console.log(err);
+                alert("Error al abrir cámara");
+                return;
+            }
+
+            Quagga.start();
+            quaggaActivo = true;
+        });
+
+        Quagga.offDetected();
+
+        Quagga.onDetected(function(result) {
+            let codigo = result.codeResult.code;
+
+            if (codigo === ultimo) {
+                repeticiones++;
+            } else {
+                ultimo = codigo;
+                repeticiones = 1;
+            }
+
+            if (repeticiones >= 3) {
+                detenerTodo();
+                mostrarResultado(codigo);
+            }
+        });
+    }
+
+    // 🔳 ESCANEAR QR (SIN MARCO Y MÁS PRECISO)
+    function iniciarQR() {
+        detenerTodo();
+        limpiarPantalla();
+
+        qrScanner = new Html5Qrcode("scanner");
+
+        qrScanner.start(
+            { facingMode: "environment" },
+            {
+                fps: 15,
+                aspectRatio: 1.777
+            },
+            (texto) => {
+                detenerTodo();
+                mostrarResultado(texto);
+            },
+            (error) => {}
+        ).catch(err => {
+            console.log(err);
+            alert("No se pudo iniciar la cámara QR");
+        });
+    }
+
+    // 🧠 MOSTRAR RESULTADO
+    async function mostrarResultado(codigo) {
+        let resultadoDiv = document.getElementById("resultado");
+
+        // 🔗 SI ES LINK (QR)
+        if (codigo.startsWith("http")) {
+            resultadoDiv.innerHTML = `
+                <p>🔗 QR detectado</p>
+                <a href="${codigo}" target="_blank">${codigo}</a>
+            `;
+            return;
+        }
+
+        resultadoDiv.innerHTML = "Buscando producto... 🔍";
+
+        try {
+            let res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${codigo}.json`);
+            let data = await res.json();
+
+            if (data.status === 1) {
+                let p = data.product;
+
+                resultadoDiv.innerHTML = `
+                    <h2>${p.product_name || "Sin nombre"}</h2>
+                    <p><b>Marca:</b> ${p.brands || "No disponible"}</p>
+                    <img src="${p.image_front_small_url || ""}" width="150">
+                    <p><b>Código:</b> ${codigo}</p>
+                `;
+            } else {
+                resultadoDiv.innerHTML = `
+                    <p>No encontrado 😢</p>
+                    <p><b>Código:</b> ${codigo}</p>
+                `;
+            }
+
+        } catch (e) {
+            resultadoDiv.innerHTML = "Error al buscar ❌";
+        }
+    }
+</script>
+
+</body>
+</html>
