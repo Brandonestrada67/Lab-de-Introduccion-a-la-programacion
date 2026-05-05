@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Captura Pro | Lab de Programación</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans text-gray-800">
+
+    <div class="max-w-6xl mx-auto p-6">
+        <header class="flex justify-between items-center bg-blue-700 text-white p-4 rounded-xl shadow-lg mb-8">
+            <h1 class="text-2xl font-bold tracking-wider">📦 Sistema de Captura Pro</h1>
+            <span class="bg-blue-900 px-3 py-1 rounded-full text-sm font-semibold">Módulo de Almacén</span>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                <h2 class="text-xl font-bold text-gray-700 mb-4 border-b pb-2">Nuevo Ingreso</h2>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-bold mb-2 text-gray-600">Lector de QR (Cámara)</label>
+                    <div id="reader" class="w-full bg-black rounded-lg overflow-hidden border-2 border-dashed border-blue-400"></div>
+                </div>
+
+                <form id="formulario-producto" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-600">Código QR Leído:</label>
+                        <input type="text" id="codigo_qr" class="w-full p-2 border rounded bg-gray-100 font-mono text-blue-600" readonly placeholder="Escanea el código o escribe..." required>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-600">ID Proveedor:</label>
+                            <input type="text" id="id_proveedor" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Ej. PRV-001" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-600">Cantidad:</label>
+                            <input type="number" id="cantidad" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500" value="1" min="1" required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-600">Nombre del Producto:</label>
+                        <input type="text" id="nombre_producto" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Ej. Cereal Kelloggs" required>
+                    </div>
+
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded transition duration-200 shadow-lg">
+                        💾 Guardar en Base de Datos
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex flex-col">
+                <h2 class="text-xl font-bold text-gray-700 mb-4 border-b pb-2">Inventario Capturado</h2>
+                <div class="flex-1 overflow-y-auto">
+                    <table class="min-w-full leading-normal">
+                        <thead>
+                            <tr>
+                                <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Producto</th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Proveedor</th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Cant.</th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">QR</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-productos">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Inicializar Lector QR
+        function onScanSuccess(decodedText, decodedResult) {
+            // Cuando escanea algo, lo pone en el input y hace un sonido
+            document.getElementById('codigo_qr').value = decodedText;
+            document.getElementById('codigo_qr').classList.add('bg-green-100');
+            setTimeout(() => document.getElementById('codigo_qr').classList.remove('bg-green-100'), 1000);
+        }
+
+        let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
+        html5QrcodeScanner.render(onScanSuccess);
+
+        // Lógica de guardado (AJAX)
+        document.getElementById('formulario-producto').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const datos = {
+                id_proveedor: document.getElementById('id_proveedor').value,
+                nombre_producto: document.getElementById('nombre_producto').value,
+                codigo_qr: document.getElementById('codigo_qr').value,
+                cantidad: document.getElementById('cantidad').value
+            };
+
+            const respuesta = await fetch('/api/guardar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datos)
+            });
+
+            const resultado = await respuesta.json();
+            
+            if(respuesta.ok) {
+                alert(resultado.mensaje);
+                document.getElementById('formulario-producto').reset();
+                cargarProductos(); // Recargar la tabla
+            } else {
+                alert("Error: " + resultado.mensaje);
+            }
+        });
+
+        // Cargar productos al iniciar
+        async function cargarProductos() {
+            const respuesta = await fetch('/api/productos');
+            const productos = await respuesta.json();
+            const tbody = document.getElementById('tabla-productos');
+            tbody.innerHTML = ''; // Limpiar tabla
+
+            productos.forEach(p => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            <p class="text-gray-900 whitespace-no-wrap font-bold">${p.nombre_producto}</p>
+                        </td>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            <p class="text-gray-900 whitespace-no-wrap">${p.id_proveedor}</p>
+                        </td>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            <span class="relative inline-block px-3 py-1 font-semibold text-blue-900 leading-tight">
+                                <span aria-hidden class="absolute inset-0 bg-blue-200 opacity-50 rounded-full"></span>
+                                <span class="relative">${p.cantidad}</span>
+                            </span>
+                        </td>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            <p class="text-gray-500 whitespace-no-wrap text-xs font-mono">${p.codigo_qr}</p>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Cargar al inicio
+        cargarProductos();
+    </script>
+</body>
+</html>
