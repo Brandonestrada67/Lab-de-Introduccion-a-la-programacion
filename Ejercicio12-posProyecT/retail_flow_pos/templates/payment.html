@@ -1,0 +1,122 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="flex h-full bg-white">
+    <div class="w-1/3 bg-blue-50 p-8 border-r border-blue-100 flex flex-col shadow-inner">
+        <h3 class="text-slate-400 font-black text-xs uppercase tracking-widest mb-6">Resumen de Pago</h3>
+        
+        <div class="mb-8">
+            <span class="text-xs font-bold text-blue-400 block mb-1">TOTAL A COBRAR</span>
+            <div class="text-5xl font-black text-blue-600 tracking-tighter" id="total-amount" data-value="{{ total }}">
+                ${{ "{:,.2f}".format(total) }}
+            </div>
+        </div>
+        
+        <div class="space-y-4 flex-grow">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-blue-100">
+                <div class="text-[10px] font-black text-slate-400 uppercase mb-1">Monto Recibido</div>
+                <div class="text-2xl font-bold text-slate-700" id="display-recibido">$ 0.00</div>
+            </div>
+            
+            <div class="bg-green-50 p-5 rounded-2xl border-2 border-green-200 shadow-md">
+                <div class="text-[10px] font-black text-green-600 uppercase mb-1 tracking-widest">Cambio a Entregar</div>
+                <div class="text-4xl font-black text-green-700" id="display-cambio">$ 0.00</div>
+            </div>
+        </div>
+
+        <div class="mt-auto pt-6 border-t border-blue-100">
+            <div class="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-2">
+                <i class="fas fa-terminal text-blue-500"></i> Terminal TERM-042 Activa
+            </div>
+        </div>
+    </div>
+
+    <div class="flex-grow p-10 bg-slate-50/30">
+        <div class="max-w-2xl mx-auto">
+            <h2 class="text-3xl font-black text-slate-800 mb-8 tracking-tight">Seleccionar Método</h2>
+
+            <div class="grid grid-cols-3 gap-4 mb-10">
+                <button onclick="setMetodo('efectivo', this)" class="payment-method-btn flex flex-col items-center justify-center p-8 border-2 border-slate-200 bg-white rounded-3xl hover:border-blue-500 transition-all shadow-sm">
+                    <i class="fas fa-money-bill-wave text-3xl mb-3"></i>
+                    <span class="text-[10px] font-black uppercase tracking-widest">Efectivo</span>
+                </button>
+                
+                <button onclick="setMetodo('tarjeta', this)" class="payment-method-btn flex flex-col items-center justify-center p-8 border-2 border-slate-200 bg-white rounded-3xl hover:border-blue-500 transition-all shadow-sm">
+                    <i class="fas fa-credit-card text-3xl mb-3"></i>
+                    <span class="text-[10px] font-black uppercase tracking-widest">Tarjeta</span>
+                </button>
+                
+                <button onclick="setMetodo('vales', this)" class="payment-method-btn flex flex-col items-center justify-center p-8 border-2 border-slate-200 bg-white rounded-3xl hover:border-blue-500 transition-all shadow-sm">
+                    <i class="fas fa-ticket-alt text-3xl mb-3"></i>
+                    <span class="text-[10px] font-black uppercase tracking-widest">Vales</span>
+                </button>
+            </div>
+
+            <div class="bg-white p-8 rounded-[2.5rem] border-2 border-slate-100 shadow-xl mb-8">
+                <label class="text-[10px] font-black text-slate-400 uppercase block mb-4 tracking-widest">Importe Recibido del Cliente</label>
+                <div class="flex gap-4">
+                    <div class="relative flex-grow">
+                        <span class="absolute left-6 top-1/2 -translate-y-1/2 text-3xl font-black text-slate-300">$</span>
+                        <input type="number" id="input-monto" step="0.01" placeholder="0.00"
+                               class="w-full pl-12 pr-6 py-6 text-4xl font-black text-slate-800 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:outline-none focus:border-blue-500 transition-all">
+                    </div>
+                    
+                    <a href="{{ url_for('process_payment') }}" 
+                       class="bg-blue-600 text-white px-10 rounded-2xl font-black text-xl hover:bg-blue-700 transition-all shadow-lg flex items-center justify-center uppercase">
+                        Finalizar
+                    </a>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center px-4">
+                <a href="{{ url_for('checkout') }}" class="text-slate-400 font-bold hover:text-slate-800 transition flex items-center gap-2">
+                    <i class="fas fa-arrow-left"></i> Volver a Caja
+                </a>
+                <div class="text-slate-300 font-black text-xs uppercase" id="metodo-seleccionado">Método: Ninguno</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const inputMonto = document.getElementById('input-monto');
+    const displayRecibido = document.getElementById('display-recibido');
+    const displayCambio = document.getElementById('display-cambio');
+    const totalCobrar = parseFloat(document.getElementById('total-amount').dataset.value);
+
+    // Escucha cada vez que escribes un número
+    inputMonto.addEventListener('input', (e) => {
+        const recibido = parseFloat(e.target.value) || 0;
+        
+        // Actualizar pantalla de "Recibido"
+        displayRecibido.innerText = `$ ${recibido.toLocaleString('es-MX', {minimumFractionDigits: 2})}`;
+        
+        // Calcular "Sobra" (Cambio)
+        if (recibido >= totalCobrar) {
+            const cambio = recibido - totalCobrar;
+            displayCambio.innerText = `$ ${cambio.toLocaleString('es-MX', {minimumFractionDigits: 2})}`;
+            displayCambio.parentElement.classList.replace('bg-green-50', 'bg-green-500');
+            displayCambio.classList.replace('text-green-700', 'text-white');
+            displayCambio.previousElementSibling.classList.replace('text-green-600', 'text-green-100');
+        } else {
+            displayCambio.innerText = `$ 0.00`;
+            displayCambio.parentElement.classList.replace('bg-green-500', 'bg-green-50');
+            displayCambio.classList.replace('text-white', 'text-green-700');
+            displayCambio.previousElementSibling.classList.replace('text-green-100', 'text-green-600');
+        }
+    });
+
+    function setMetodo(metodo, btn) {
+        // Quitar estilos de otros botones
+        document.querySelectorAll('.payment-method-btn').forEach(b => {
+            b.classList.remove('border-blue-600', 'bg-blue-50', 'text-blue-600', 'shadow-md');
+        });
+        
+        // Aplicar estilos al seleccionado
+        btn.classList.add('border-blue-600', 'bg-blue-50', 'text-blue-600', 'shadow-md');
+        document.getElementById('metodo-seleccionado').innerText = `Método: ${metodo.toUpperCase()}`;
+        
+        // Enfocar el input automáticamente
+        inputMonto.focus();
+    }
+</script>
+{% endblock %}

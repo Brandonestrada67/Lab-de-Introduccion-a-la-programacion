@@ -1,0 +1,99 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="flex h-full bg-slate-100">
+    <div class="flex-grow p-6 bg-white overflow-y-auto shadow-inner">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-black text-slate-800">Venta Actual</h2>
+                <p class="text-xs text-slate-400 uppercase tracking-widest">Carrito de Compras ({{ cart|length }} Items)</p>
+            </div>
+            <a href="{{ url_for('clear_cart') }}" class="flex items-center gap-2 text-red-500 font-bold hover:text-red-700 transition text-sm">
+                <i class="fas fa-trash-alt"></i> VACIAR CARRITO
+            </a>
+        </div>
+        
+        <table class="w-full text-left border-separate border-spacing-y-2">
+            <thead>
+                <tr class="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                    <th class="px-4 py-2">Producto / SKU</th>
+                    <th class="px-4 py-2">Precio Unit.</th>
+                    <th class="px-4 py-2 text-center">Cant.</th>
+                    <th class="px-4 py-2 text-right">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart %}
+                <tr class="bg-slate-50 hover:bg-blue-50 transition-colors group">
+                    <td class="p-4 rounded-l-xl border-l-4 border-transparent group-hover:border-blue-500">
+                        <div class="font-bold text-slate-700">{{ item.name }}</div>
+                        <div class="text-[10px] font-mono text-slate-400">{{ item.sku }}</div>
+                    </td>
+                    <td class="p-4 text-slate-600 font-medium">${{ "{:,.2f}".format(item.price) }}</td>
+                    <td class="p-4 text-center">
+                        <span class="bg-white px-3 py-1 rounded-lg border font-bold text-slate-700 shadow-sm">
+                            {{ item.quantity }}
+                        </span>
+                    </td>
+                    <td class="p-4 text-right font-black text-slate-800 rounded-r-xl">
+                        ${{ "{:,.2f}".format(item.price * item.quantity) }}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="py-20 text-center">
+                        <div class="text-slate-300 mb-4">
+                            <i class="fas fa-shopping-basket text-6xl"></i>
+                        </div>
+                        <p class="text-slate-400 font-medium">El carrito está vacío. Escanee un producto para comenzar.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="w-96 bg-slate-50 border-l border-slate-200 p-6 flex flex-col justify-between shadow-xl">
+        <div>
+            <div class="mb-8">
+                <a href="{{ url_for('scan') }}" class="w-full flex flex-col items-center justify-center gap-2 bg-blue-50 text-blue-700 py-6 rounded-2xl font-black border-2 border-dashed border-blue-300 hover:bg-blue-100 hover:border-blue-500 transition-all group">
+                    <i class="fas fa-barcode text-3xl group-hover:scale-110 transition-transform"></i>
+                    <span>ESCANEAR PRODUCTO</span>
+                    <span class="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded">F1</span>
+                </a>
+            </div>
+            
+            <div class="space-y-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="flex justify-between text-slate-500 font-medium">
+                    <span>Subtotal</span>
+                    <span>${{ "{:,.2f}".format(subtotal) }}</span>
+                </div>
+                <div class="flex justify-between text-slate-500 font-medium">
+                    <span>IVA (16%)</span>
+                    <span>${{ "{:,.2f}".format(iva) }}</span>
+                </div>
+                <div class="pt-4 border-t-2 border-dashed">
+                    <div class="flex justify-between items-end">
+                        <span class="text-xs font-black text-slate-400 uppercase tracking-tighter">Total a Pagar</span>
+                        <span class="text-4xl font-black text-blue-600 tracking-tighter">${{ "{:,.2f}".format(total) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="space-y-3 mt-8">
+            <a href="{{ url_for('payment') }}" class="w-full flex items-center justify-center bg-green-600 text-white py-5 rounded-2xl font-black text-2xl shadow-lg shadow-green-200 hover:bg-green-700 hover:-translate-y-1 active:translate-y-0 transition-all">
+                COBRAR (F12)
+            </a>
+            
+            <div class="grid grid-cols-2 gap-2">
+                <button class="bg-slate-200 py-3 rounded-xl font-bold text-slate-600 hover:bg-slate-300 transition text-sm">
+                    <i class="fas fa-pause mr-1"></i> Suspender
+                </button>
+                <button class="bg-slate-200 py-3 rounded-xl font-bold text-slate-600 hover:bg-slate-300 transition text-sm">
+                    <i class="fas fa-percentage mr-1"></i> Descuento
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

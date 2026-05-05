@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="p-8">
+    <div class="grid grid-cols-3 gap-6 mb-8">
+        <div class="bg-blue-600 p-6 rounded-2xl text-white shadow-lg">
+            <div class="text-[10px] font-black uppercase opacity-70">Ventas Totales Hoy</div>
+            <div class="text-3xl font-black">${{ "{:,.2f}".format(total_dia) }}</div>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border shadow-sm">
+            <div class="text-[10px] font-black text-slate-400 uppercase">Transacciones</div>
+            <div class="text-3xl font-black text-slate-800">{{ history|length }}</div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+        <div class="p-6 border-b font-black text-slate-700">Historial Reciente</div>
+        <table class="w-full text-left">
+            <thead class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase">
+                <tr>
+                    <th class="p-4">Ticket ID</th>
+                    <th class="p-4">Hora</th>
+                    <th class="p-4 text-center">Artículos</th>
+                    <th class="p-4 text-right">Monto Total</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                {% for sale in history %}
+                <tr class="hover:bg-slate-50">
+                    <td class="p-4 font-bold text-blue-600">#{{ sale.id }}</td>
+                    <td class="p-4 text-slate-500">{{ sale.hora }}</td>
+                    <td class="p-4 text-center font-bold">{{ sale.items }}</td>
+                    <td class="p-4 text-right font-black text-slate-800">${{ "{:,.2f}".format(sale.total) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
